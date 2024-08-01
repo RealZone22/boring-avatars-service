@@ -1,5 +1,6 @@
 .DS_Store
 .vercel
+.idea
 
 node_modules
 
