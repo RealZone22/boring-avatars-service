@@ -20,10 +20,29 @@ function normalizeColors(colors) {
 
 const app = require('express')();
 
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        const logData = {
+            method: req.method,
+            url: req.originalUrl,
+            params: req.params,
+            query: req.query,
+            status: res.statusCode,
+            duration: duration,
+            ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+            userAgent: req.headers['user-agent'],
+            timestamp: new Date().toISOString()
+        };
+        console.log('[Request]', JSON.stringify(logData));
+    });
+    next();
+});
+
 app.get('/:variant?/:size?/:name?', (req, res) => {
-    const { variant = DEFAULT_VARIANT, size = DEFAULT_SIZE } = req.params
+    const { variant = DEFAULT_VARIANT, size = DEFAULT_SIZE } = req.params;
     const name = req.query.name || req.params.name || Math.random().toString();
-    console.log(req.query.colors);
     const colors = normalizeColors(req.query.colors || DEFAULT_COLORS);
 
     if (!VALID_VARIANTS.has(variant)) {
@@ -50,4 +69,3 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server running on ${port}, http://localhost:${port}`);
 });
-
